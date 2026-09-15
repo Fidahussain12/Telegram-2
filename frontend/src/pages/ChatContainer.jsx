@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import ChatHeader from "../components/ChatHeader";
@@ -19,6 +19,15 @@ function ChatContainer() {
   const { authUser } = useAuthStore();
   const scrollContainerRef = useRef(null);
 
+  const scrollToBottom = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    // rAF: layout settle hone ke baad scroll karo (mobile par zyada reliable)
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+  }, []);
+
   // 1. Fetch messages & subscribe to socket on user select
   useEffect(() => {
     if (selectedUser?._id) {
@@ -31,32 +40,37 @@ function ChatContainer() {
     };
   }, [selectedUser?._id]);
 
-  // 2. Instant Auto-scroll to Bottom when messages or selectedUser change
+  // 2. Auto-scroll to bottom when messages or selectedUser change
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-    }
-  }, [messages, isMessagesLoading, selectedUser?._id]);
+    scrollToBottom();
+  }, [messages, isMessagesLoading, selectedUser?._id, scrollToBottom]);
+
+  // 3. Mobile keyboard khulne/band hone par view ko bottom par rakho
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    vv.addEventListener("resize", scrollToBottom);
+    return () => vv.removeEventListener("resize", scrollToBottom);
+  }, [scrollToBottom]);
 
   return (
-    // Fixed Mobile Dynamic Height with h-[100dvh]
-    <div className="flex-1 flex flex-col h-[100dvh] md:h-full w-full overflow-hidden bg-slate-900/50 relative">
+    <div className="flex-1 flex flex-col h-[100dvh] md:h-full w-full min-h-0 overflow-hidden bg-slate-900/50 relative">
       <ChatHeader />
 
-      {/* Messages List Area with Ref */}
-      <div 
+      {/* Messages List Area */}
+      <div
         ref={scrollContainerRef}
-        className="flex-1 px-4 sm:px-6 overflow-y-auto py-4 sm:py-6"
+        className="flex-1 min-h-0 px-3 sm:px-6 py-3 sm:py-6 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]"
       >
         {messages?.length > 0 && !isMessagesLoading ? (
-          <div className="max-w-3xl mx-auto space-y-4">
+          <div className="max-w-3xl mx-auto space-y-2.5 sm:space-y-4">
             {messages.map((msg, index) => (
               <div
                 key={msg._id || `msg-${index}`}
                 className={`chat ${msg.senderId === authUser?._id ? "chat-end" : "chat-start"}`}
               >
                 <div
-                  className={`chat-bubble relative max-w-[85%] sm:max-w-[70%] ${
+                  className={`chat-bubble relative max-w-[80vw] sm:max-w-[70%] px-3 py-2 ${
                     msg.senderId === authUser?._id
                       ? "bg-cyan-600 text-white"
                       : "bg-slate-800 text-slate-200"
@@ -66,17 +80,18 @@ function ChatContainer() {
                     <img
                       src={msg.image}
                       alt="Shared"
-                      className="rounded-lg max-h-48 w-full object-cover mb-2"
-                      onLoad={() => {
-                        // Image load hone ke baad dubara scroll bottom par adjust kar de
-                        if (scrollContainerRef.current) {
-                          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-                        }
-                      }}
+                      loading="lazy"
+                      decoding="async"
+                      className="rounded-lg w-full max-w-[220px] sm:max-w-[260px] max-h-64 object-cover mb-2"
+                      onLoad={scrollToBottom}
                     />
                   )}
-                  {msg.text && <p className="break-words text-sm sm:text-base">{msg.text}</p>}
-                  <p className="text-[10px] sm:text-xs mt-1 opacity-70 text-right">
+                  {msg.text && (
+                    <p className="break-words whitespace-pre-wrap text-[15px] sm:text-base leading-snug">
+                      {msg.text}
+                    </p>
+                  )}
+                  <p className="text-[10px] sm:text-xs mt-1 opacity-70 text-right tabular-nums">
                     {new Date(msg.createdAt).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",

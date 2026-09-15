@@ -27,26 +27,29 @@ function ChatsList() {
         const isSelected = selectedUser?._id === chat._id;
 
         return (
-          <div
+          <button
             key={chat._id}
-            className={`p-3 rounded-lg cursor-pointer transition-colors flex items-center justify-between ${
+            type="button"
+            onClick={() => setSelectedUser(chat)}
+            className={`w-full text-left p-3 rounded-lg cursor-pointer select-none touch-manipulation transition-colors flex items-center justify-between gap-2 min-h-[60px] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
               isSelected
                 ? "bg-cyan-500/20 border border-cyan-500/40"
-                : "bg-cyan-500/10 hover:bg-cyan-500/20"
+                : "bg-cyan-500/10 hover:bg-cyan-500/20 active:bg-cyan-500/25 border border-transparent"
             }`}
-            onClick={() => setSelectedUser(chat)}
           >
             {/* Left Side: Avatar & Details */}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <div
-                className={`avatar ${
+                className={`avatar shrink-0 ${
                   onlineUsers.includes(chat._id) ? "online" : "offline"
                 }`}
               >
-                <div className="size-10 rounded-full">
+                <div className="size-10 rounded-full overflow-hidden">
                   <img
                     src={chat.profilePic || "/avatar.png"}
                     alt={chat.fullName}
+                    loading="lazy"
+                    className="w-full h-full object-cover"
                   />
                 </div>
               </div>
@@ -63,11 +66,11 @@ function ChatsList() {
 
             {/* Right Side: Unread Count Badge */}
             {chat.unreadCount > 0 && !isSelected && (
-              <span className="bg-cyan-500 text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ml-2">
+              <span className="bg-cyan-500 text-slate-950 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 tabular-nums">
                 {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
               </span>
             )}
-          </div>
+          </button>
         );
       })}
     </>

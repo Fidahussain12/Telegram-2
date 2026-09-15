@@ -10,6 +10,7 @@ function MessageInput() {
   const [imagePreview, setImagePreview] = useState(null);
 
   const fileInputRef = useRef(null);
+  const inputRef = useRef(null);
   const { sendMessage, isSoundEnabled } = useChatStore();
 
   const handleSendMessage = (e) => {
@@ -25,6 +26,8 @@ function MessageInput() {
     setText("");
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    // Mobile par keyboard khula rakho taake next message type ho sake
+    inputRef.current?.focus();
   };
 
   const handleImageChange = (e) => {
@@ -44,8 +47,10 @@ function MessageInput() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const canSend = Boolean(text.trim() || imagePreview);
+
   return (
-    <div className="p-3 sm:p-4 border-t border-slate-700/50 bg-slate-900/90 shrink-0">
+    <div className="shrink-0 border-t border-slate-700/50 bg-slate-900/90 backdrop-blur px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-4 sm:pt-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom))]">
       {imagePreview && (
         <div className="max-w-3xl mx-auto mb-3 flex items-center">
           <div className="relative">
@@ -56,7 +61,8 @@ function MessageInput() {
             />
             <button
               onClick={removeImage}
-              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-200 hover:bg-slate-700"
+              aria-label="Remove image"
+              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 hover:bg-slate-700 active:bg-slate-600 touch-manipulation"
               type="button"
             >
               <XIcon className="w-4 h-4" />
@@ -67,9 +73,10 @@ function MessageInput() {
 
       <form
         onSubmit={handleSendMessage}
-        className="max-w-3xl mx-auto flex items-center space-x-2 sm:space-x-4"
+        className="max-w-3xl mx-auto flex items-center gap-2 sm:gap-3"
       >
         <input
+          ref={inputRef}
           type="text"
           value={text}
           onChange={(e) => {
@@ -77,12 +84,15 @@ function MessageInput() {
             isSoundEnabled && playRandomKeyStrokeSound();
           }}
           onFocus={(e) => {
-            // Mobile keyboard visible hone par auto scroll
             setTimeout(() => {
               e.target.scrollIntoView({ behavior: "smooth", block: "nearest" });
             }, 300);
           }}
-          className="flex-1 bg-slate-800/80 border border-slate-700/50 rounded-lg py-2.5 px-4 text-slate-100 placeholder-slate-400 focus:outline-none focus:border-cyan-500 text-sm sm:text-base"
+          autoComplete="off"
+          autoCorrect="off"
+          enterKeyHint="send"
+          /* text-base (16px) zaroori hai warna iOS focus par zoom kar deta hai */
+          className="flex-1 min-w-0 bg-slate-800/80 border border-slate-700/50 rounded-full sm:rounded-lg h-11 px-4 text-base text-slate-100 placeholder-slate-400 focus:outline-none focus:border-cyan-500"
           placeholder="Type your message..."
         />
 
@@ -96,9 +106,10 @@ function MessageInput() {
 
         <button
           type="button"
+          aria-label="Attach image"
           onClick={() => fileInputRef.current?.click()}
-          className={`bg-slate-800/80 text-slate-400 hover:text-slate-200 rounded-lg p-2.5 sm:px-4 transition-colors ${
-            imagePreview ? "text-cyan-500" : ""
+          className={`shrink-0 h-11 w-11 sm:w-auto sm:px-4 rounded-full sm:rounded-lg bg-slate-800/80 flex items-center justify-center transition-colors touch-manipulation active:bg-slate-700 ${
+            imagePreview ? "text-cyan-400" : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <ImageIcon className="w-5 h-5" />
@@ -106,8 +117,9 @@ function MessageInput() {
 
         <button
           type="submit"
-          disabled={!text.trim() && !imagePreview}
-          className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg p-2.5 sm:px-4 sm:py-2.5 font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Send message"
+          disabled={!canSend}
+          className="shrink-0 h-11 w-11 sm:w-auto sm:px-5 rounded-full sm:rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 text-white flex items-center justify-center font-medium hover:from-cyan-600 hover:to-cyan-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 touch-manipulation"
         >
           <SendIcon className="w-5 h-5" />
         </button>
