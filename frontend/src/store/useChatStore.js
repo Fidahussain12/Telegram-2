@@ -21,19 +21,16 @@ export const useChatStore = create((set, get) => ({
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 
-  // Updated setSelectedUser for Mobile Telegram Flow
   setSelectedUser: (selectedUser) => {
     set({ selectedUser });
 
     if (selectedUser) {
-      // 1. Direct UI Badge Clear
       set({
         chats: get().chats.map((chat) =>
           chat._id === selectedUser._id ? { ...chat, unreadCount: 0 } : chat
         ),
       });
 
-      // 2. Auto-fetch messages for the selected user
       get().getMessagesByUserId(selectedUser._id);
     }
   },
@@ -70,7 +67,6 @@ export const useChatStore = create((set, get) => ({
 
       await axiosInstance.put(`/messages/mark-as-read/${userId}`);
 
-      // Active state chat array update
       set({
         chats: get().chats.map((chat) =>
           chat._id === userId ? { ...chat, unreadCount: 0 } : chat
@@ -129,12 +125,15 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
+    // Both possible event names handled
+    socket.off("newMessage");
     socket.off("newMessages");
-    socket.on("newMessages", (newMessage) => {
+
+    const handleNewMessage = (newMessage) => {
       const { selectedUser, isSoundEnabled, chats, messages } = get();
 
       const isMessageFromSelectedUser =
-        selectedUser && newMessage.senderId === selectedUser._id;
+        selectedUser && (newMessage.senderId === selectedUser._id || newMessage.receiverId === selectedUser._id);
 
       if (isMessageFromSelectedUser) {
         set({ messages: [...messages, newMessage] });
@@ -146,7 +145,7 @@ export const useChatStore = create((set, get) => ({
 
       set({
         chats: chats.map((chat) => {
-          if (chat._id === newMessage.senderId) {
+          if (chat._id === newMessage.senderId || chat._id === newMessage.receiverId) {
             return {
               ...chat,
               lastMessage: newMessage.text || "📷 Photo",
@@ -166,20 +165,17 @@ export const useChatStore = create((set, get) => ({
           console.log("Audio play failed:", e)
         );
       }
+    };
 
-      if (
-        !isMessageFromSelectedUser &&
-        Notification.permission === "granted"
-      ) {
-        new Notification("New Message", {
-          body: newMessage.text || "Sent an image",
-        });
-      }
-    });
+    socket.on("newMessage", handleNewMessage);
+    socket.on("newMessages", handleNewMessage);
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
-    if (socket) socket.off("newMessages");
+    if (socket) {
+      socket.off("newMessage");
+      socket.off("newMessages");
+    }
   },
 }));
