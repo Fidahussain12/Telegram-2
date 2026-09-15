@@ -17,8 +17,9 @@ function ChatContainer() {
   } = useChatStore();
 
   const { authUser } = useAuthStore();
-  const messageEndRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
+  // 1. Fetch messages & subscribe to socket on user select
   useEffect(() => {
     if (selectedUser?._id) {
       getMessagesByUserId(selectedUser._id);
@@ -30,18 +31,22 @@ function ChatContainer() {
     };
   }, [selectedUser?._id]);
 
+  // 2. Instant Auto-scroll to Bottom when messages or selectedUser change
   useEffect(() => {
-    if (messageEndRef.current && messages) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isMessagesLoading, selectedUser?._id]);
 
   return (
     <div className="flex-1 flex flex-col h-full w-full overflow-hidden bg-slate-900/50 relative">
       <ChatHeader />
 
-      {/* Messages List Area */}
-      <div className="flex-1 px-4 sm:px-6 overflow-y-auto py-4 sm:py-6">
+      {/* Messages List Area with Ref */}
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 px-4 sm:px-6 overflow-y-auto py-4 sm:py-6"
+      >
         {messages?.length > 0 && !isMessagesLoading ? (
           <div className="max-w-3xl mx-auto space-y-4">
             {messages.map((msg, index) => (
@@ -61,6 +66,12 @@ function ChatContainer() {
                       src={msg.image}
                       alt="Shared"
                       className="rounded-lg max-h-48 w-full object-cover mb-2"
+                      onLoad={() => {
+                        // Image load hone ke baad dubara scroll bottom par adjust kar de
+                        if (scrollContainerRef.current) {
+                          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+                        }
+                      }}
                     />
                   )}
                   {msg.text && <p className="break-words text-sm sm:text-base">{msg.text}</p>}
@@ -73,7 +84,6 @@ function ChatContainer() {
                 </div>
               </div>
             ))}
-            <div ref={messageEndRef} />
           </div>
         ) : isMessagesLoading ? (
           <MessagesLoadingSkeleton />
