@@ -38,7 +38,7 @@ export const getMessagesByUserId = async (req, res) => {
   }
 };
 
-// 3. Send Message Controller
+// 3. Send Message Controller (Optimized Realtime Emit)
 export const sendMessage = async (req, res) => {
   try {
     const { text, image } = req.body;
@@ -73,8 +73,10 @@ export const sendMessage = async (req, res) => {
 
     await newMessage.save();
 
+    // Direct emit on both event names for 100% real-time delivery
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
       io.to(receiverSocketId).emit("newMessages", newMessage);
     }
 
@@ -85,7 +87,7 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-// 4. Chat Partners (Sidebar Data with Read/Unread Logic Fix)
+// 4. Chat Partners (Sidebar Data)
 export const getChatPartners = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
@@ -104,7 +106,6 @@ export const getChatPartners = async (req, res) => {
         partnersMap.set(partnerId, {
           lastMessage: msg.text || (msg.image ? "📷 Photo" : ""),
           lastMessageTime: msg.createdAt,
-          // Sirf isRead === false par increment hoga
           unreadCount: (!isSender && msg.isRead === false) ? 1 : 0,
         });
       } else {

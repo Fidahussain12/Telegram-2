@@ -12,7 +12,9 @@ const io = new Server(server, {
         origin: ENV.NODE_ENV === "production" ? true : [ENV.CLIENT_URL, "http://localhost:5173"],
         credentials: true,
     },
-    transports: ["websocket", "polling"], // Mobile browsers connection fallback
+    pingTimeout: 10000,
+    pingInterval: 5000,
+    transports: ["websocket", "polling"],
 });
 
 io.use(socketAuthMiddleware);

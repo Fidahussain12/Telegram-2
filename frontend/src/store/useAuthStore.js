@@ -91,8 +91,8 @@ export const useAuthStore = create((set, get) => ({
       withCredentials: true,
       transports: ["websocket", "polling"],
       reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 500,
     });
 
     socket.connect();
