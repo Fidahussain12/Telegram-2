@@ -21,15 +21,20 @@ export const useChatStore = create((set, get) => ({
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 
+  // Updated setSelectedUser for Mobile Telegram Flow
   setSelectedUser: (selectedUser) => {
     set({ selectedUser });
+
     if (selectedUser) {
-      // Direct UI se badge reset karein
+      // 1. Direct UI Badge Clear
       set({
         chats: get().chats.map((chat) =>
           chat._id === selectedUser._id ? { ...chat, unreadCount: 0 } : chat
         ),
       });
+
+      // 2. Auto-fetch messages for the selected user
+      get().getMessagesByUserId(selectedUser._id);
     }
   },
 
@@ -63,10 +68,9 @@ export const useChatStore = create((set, get) => ({
       const res = await axiosInstance.get(`/messages/${userId}`);
       set({ messages: res.data });
 
-      // Chat open hone par automatically DB me messages isRead: true mark karein
       await axiosInstance.put(`/messages/mark-as-read/${userId}`);
 
-      // Active state chat array update karein
+      // Active state chat array update
       set({
         chats: get().chats.map((chat) =>
           chat._id === userId ? { ...chat, unreadCount: 0 } : chat
@@ -135,7 +139,6 @@ export const useChatStore = create((set, get) => ({
       if (isMessageFromSelectedUser) {
         set({ messages: [...messages, newMessage] });
 
-        // Jab active open chat me realtime message aaye toh DB update trigger karein
         axiosInstance
           .put(`/messages/mark-as-read/${selectedUser._id}`)
           .catch((err) => console.log("Read mark failed:", err));
