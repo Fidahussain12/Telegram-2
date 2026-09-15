@@ -38,7 +38,7 @@ export const getMessagesByUserId = async (req, res) => {
   }
 };
 
-// 3. Send Message Controller (Optimized Realtime Emit)
+// 3. Send Message Controller (Single Event Fixed)
 export const sendMessage = async (req, res) => {
   try {
     const { text, image } = req.body;
@@ -73,11 +73,10 @@ export const sendMessage = async (req, res) => {
 
     await newMessage.save();
 
-    // Direct emit on both event names for 100% real-time delivery
+    // Sirf Single 'newMessage' Event Broadcast
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
-      io.to(receiverSocketId).emit("newMessages", newMessage);
     }
 
     res.status(201).json(newMessage);

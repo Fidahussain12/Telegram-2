@@ -25,8 +25,10 @@ function ChatContainer() {
       subscribeToMessages();
     }
 
-    return () => unsubscribeFromMessages();
-  }, [selectedUser?._id, getMessagesByUserId, subscribeToMessages, unsubscribeFromMessages]);
+    return () => {
+      unsubscribeFromMessages();
+    };
+  }, [selectedUser?._id]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -42,9 +44,9 @@ function ChatContainer() {
       <div className="flex-1 px-4 sm:px-6 overflow-y-auto py-4 sm:py-6">
         {messages?.length > 0 && !isMessagesLoading ? (
           <div className="max-w-3xl mx-auto space-y-4">
-            {messages.map((msg) => (
+            {messages.map((msg, index) => (
               <div
-                key={msg._id}
+                key={msg._id || `msg-${index}`}
                 className={`chat ${msg.senderId === authUser?._id ? "chat-end" : "chat-start"}`}
               >
                 <div
