@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useChatStore } from "../store/useChatStore";
 import BorderAnimatedContainer from "../components/BorderAnimatedContainer";
 import ChatContainer from "./ChatContainer";
@@ -9,7 +9,18 @@ import ContactList from "./ContactList";
 import ProfileHeader from "./ProfileHeader";
 
 function ChatPage() {
-  const { activeTab, selectedUser } = useChatStore();
+  const {
+    activeTab,
+    selectedUser,
+    subscribeToMessages,
+    unsubscribeFromMessages,
+  } = useChatStore();
+
+  useEffect(() => {
+    subscribeToMessages();
+    return () => unsubscribeFromMessages();
+  }, [subscribeToMessages, unsubscribeFromMessages]);
+
   return (
     <div className="relative w-full max-w-6xl h-[800px]">
       <BorderAnimatedContainer>
@@ -21,7 +32,8 @@ function ChatPage() {
             {activeTab === "chats" ? <ChatsList /> : <ContactList />}
           </div>
         </div>
-        {/* RIGHT SIDE */}
+
+        {/* Right Side */}
         <div className="flex-1 flex flex-col bg-slate-900/50 backdrop-blur-sm">
           {selectedUser ? <ChatContainer /> : <NoConversationPlaceholder />}
         </div>
