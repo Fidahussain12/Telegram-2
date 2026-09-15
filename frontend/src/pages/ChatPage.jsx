@@ -22,9 +22,9 @@ function ChatPage() {
   }, [subscribeToMessages, unsubscribeFromMessages]);
 
   return (
-    <div className="relative w-full max-w-6xl h-[100dvh] sm:h-[800px]">
+    <div className="relative w-full max-w-6xl h-[100dvh] sm:h-[800px] overflow-hidden">
       <BorderAnimatedContainer>
-       
+        {/* Left Side: Mobile par hidden jab selectedUser true ho */}
         <div
           className={`w-full md:w-80 bg-slate-800/50 backdrop-blur-sm flex flex-col ${
             selectedUser ? "hidden md:flex" : "flex"
@@ -37,9 +37,9 @@ function ChatPage() {
           </div>
         </div>
 
-       
+        {/* Right Side: Mobile par hidden jab selectedUser null ho */}
         <div
-          className={`flex-1 flex flex-col bg-slate-900/50 backdrop-blur-sm ${
+          className={`flex-1 flex flex-col bg-slate-900/50 backdrop-blur-sm overflow-hidden ${
             !selectedUser ? "hidden md:flex" : "flex"
           }`}
         >

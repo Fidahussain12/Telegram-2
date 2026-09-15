@@ -10,7 +10,6 @@ function MessageInput() {
   const [imagePreview, setImagePreview] = useState(null);
 
   const fileInputRef = useRef(null);
-
   const { sendMessage, isSoundEnabled } = useChatStore();
 
   const handleSendMessage = (e) => {
@@ -24,13 +23,13 @@ function MessageInput() {
     });
 
     setText("");
-    setImagePreview("");
+    setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (!file.type.startsWith("image/")) {
+    if (!file || !file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
@@ -44,15 +43,16 @@ function MessageInput() {
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
   return (
-    <div className="p-4 border-t border-slate-700/50">
+    <div className="p-3 sm:p-4 border-t border-slate-700/50 bg-slate-900/90 shrink-0">
       {imagePreview && (
         <div className="max-w-3xl mx-auto mb-3 flex items-center">
           <div className="relative">
             <img
               src={imagePreview}
               alt="Preview"
-              className="w-20 h-20 object-cover rounded-lg border border-slate-700"
+              className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border border-slate-700"
             />
             <button
               onClick={removeImage}
@@ -67,7 +67,7 @@ function MessageInput() {
 
       <form
         onSubmit={handleSendMessage}
-        className="max-w-3xl mx-auto flex space-x-4"
+        className="max-w-3xl mx-auto flex items-center space-x-2 sm:space-x-4"
       >
         <input
           type="text"
@@ -76,7 +76,13 @@ function MessageInput() {
             setText(e.target.value);
             isSoundEnabled && playRandomKeyStrokeSound();
           }}
-          className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg py-2 px-4"
+          onFocus={(e) => {
+            // Mobile keyboard visible hone par auto scroll
+            setTimeout(() => {
+              e.target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }, 300);
+          }}
+          className="flex-1 bg-slate-800/80 border border-slate-700/50 rounded-lg py-2.5 px-4 text-slate-100 placeholder-slate-400 focus:outline-none focus:border-cyan-500 text-sm sm:text-base"
           placeholder="Type your message..."
         />
 
@@ -91,16 +97,17 @@ function MessageInput() {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className={`bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg px-4 transition-colors ${
+          className={`bg-slate-800/80 text-slate-400 hover:text-slate-200 rounded-lg p-2.5 sm:px-4 transition-colors ${
             imagePreview ? "text-cyan-500" : ""
           }`}
         >
           <ImageIcon className="w-5 h-5" />
         </button>
+
         <button
           type="submit"
           disabled={!text.trim() && !imagePreview}
-          className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg px-4 py-2 font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg p-2.5 sm:px-4 sm:py-2.5 font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <SendIcon className="w-5 h-5" />
         </button>
