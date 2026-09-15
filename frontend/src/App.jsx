@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router";
 import ChatPage from "./pages/ChatPage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignupPage";
-import PageLoader from "./components/PageLoader"; 
+import SplashScreen from "./components/SplashScreen"; 
 import { useAuthStore } from "./store/useAuthStore";
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
@@ -11,12 +11,13 @@ function App() {
   const { checkAuth, isCheckingAuth, authUser } = useAuthStore();
 
   useEffect(() => {
-      checkAuth();
+    checkAuth();
   }, [checkAuth]);
 
   console.log({ authUser });
 
-  if (isCheckingAuth) return <PageLoader />;
+  // PageLoader ki jagah SplashScreen render ho raha hai
+  if (isCheckingAuth) return <SplashScreen />;
 
   return (
     <div className="min-h-screen bg-slate-900 relative flex items-center justify-center p-4 overflow-hidden">
@@ -25,7 +26,6 @@ function App() {
       <div className="absolute top-0 -left-4 size-96 bg-pink-500 opacity-20 blur-[100px]" />
       <div className="absolute bottom-0 -right-4 size-96 bg-cyan-500 opacity-20 blur-[100px]" />
 
-      {/* Width ko w-full aur max-w-6xl kar diya gaya hai taake layout na dabey */}
       <div className="relative z-10 w-full max-w-6xl flex items-center justify-center">
         <Routes>
           <Route path="/" element={authUser ? <ChatPage /> : <Navigate to={"/login"} />} />
