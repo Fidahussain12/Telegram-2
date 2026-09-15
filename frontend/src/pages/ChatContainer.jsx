@@ -39,7 +39,8 @@ function ChatContainer() {
   }, [messages, isMessagesLoading, selectedUser?._id]);
 
   return (
-    <div className="flex-1 flex flex-col h-full w-full overflow-hidden bg-slate-900/50 relative">
+    // Fixed Mobile Dynamic Height with h-[100dvh]
+    <div className="flex-1 flex flex-col h-[100dvh] md:h-full w-full overflow-hidden bg-slate-900/50 relative">
       <ChatHeader />
 
       {/* Messages List Area with Ref */}
